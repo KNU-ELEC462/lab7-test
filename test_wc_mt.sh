@@ -92,8 +92,10 @@ if ! python3 gen.py "$WORD_COUNT" "$INPUT_LARGE"; then
 fi
 
 # Run wc -w
+echo "Warming up baseline wc -w..."
+wc -w < "$INPUT_LARGE" > /dev/null
+
 echo "Running baseline wc -w..."
-echo 3 | sudo tee /proc/sys/vm/drop_caches 1>/dev/null
 WC_LOG="${OUTPUT_DIR}/wc.log"
 WC_COUNT=$( (time -p wc -w < "$INPUT_LARGE") 2> "$WC_LOG" | awk '{print $1}')
 WC_TIME=$(grep real "$WC_LOG" | awk '{print $2}')
@@ -101,8 +103,10 @@ echo "Baseline word count: $WC_COUNT"
 echo "Baseline time: $WC_TIME s"
 
 # Run wc_mt
+echo "Warming up target program..."
+"$BIN" "$INPUT_LARGE" "$NUM_THREADS" > /dev/null 2>&1
+
 echo "Running target program: $TARGET"
-echo 3 | sudo tee /proc/sys/vm/drop_caches 1>/dev/null
 { time -p "$BIN" "$INPUT_LARGE" "$NUM_THREADS"; } > "$LARGE_LOG" 2>&1
 
 # Extract results from log
